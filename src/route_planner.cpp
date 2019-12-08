@@ -56,7 +56,7 @@ current_node->FindNeighbors();
 int len=current_node->neighbors.size();
 
 //update the expansion value
-auto g_value = current_node->g_value+1;
+//auto g_value = current_node->g_value+1;
 auto h_value = 0.0;
 //cout <<"g val: " <<g_value<<endl;
 
@@ -66,7 +66,9 @@ for (int i=0 ; i < len ; i++){
     // calculate  the heuristics 'h' which is the distance to the end node or goal
     h_value=CalculateHValue(current_node->neighbors[i]);
     current_node->neighbors[i]->h_value=h_value;
-    current_node->neighbors[i]->g_value=g_value;
+    //update expansion
+    //new g value is current g value + distance from current node
+    current_node->neighbors[i]->g_value=current_node->neighbors[i]->g_value + current_node->neighbors[i]->distance(*(current_node));
     current_node->neighbors[i]->parent=current_node;
     current_node->neighbors[i]->visited=true;
     open_list.push_back(current_node->neighbors[i]);
