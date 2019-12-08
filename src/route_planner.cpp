@@ -32,7 +32,7 @@ float RoutePlanner::CalculateHValue(RouteModel::Node const *node) {
 auto other = *(this->end_node);
 
 auto dist=node->distance(other);
-cout <<"dist " << dist << endl;
+//cout <<"dist " << dist << endl;
 return dist;
 
 }
@@ -58,7 +58,7 @@ int len=current_node->neighbors.size();
 //update the expansion value
 auto g_value = current_node->g_value+1;
 auto h_value = 0.0;
-cout <<"g val: " <<g_value<<endl;
+//cout <<"g val: " <<g_value<<endl;
 
 for (int i=0 ; i < len ; i++){
 
@@ -176,7 +176,7 @@ void RoutePlanner::AStarSearch() {
     auto y =   this->end_node->y;
 
 
-    cout << "endx,endy" << this->end_node->x <<"," << this->end_node->y<< endl;
+  //  cout << "endx,endy" << this->end_node->x <<"," << this->end_node->y<< endl;
 
     // TODO: Implement your solution here.
     //while the node is not the end node 
@@ -189,10 +189,10 @@ void RoutePlanner::AStarSearch() {
             AddNeighbors(current_node);
             //delete current_node; ??
             current_node=NextNode();
-            cout << "endx,endy,currx,curry: " << this->end_node->x <<"," << this->end_node->y<<","<<current_node->x<<","<<current_node->y<<endl;
+         //   cout << "endx,endy,currx,curry: " << this->end_node->x <<"," << this->end_node->y<<","<<current_node->x<<","<<current_node->y<<endl;
     
      }
-     cout << "end of search" <<endl;
+  //   cout << "end of search" <<endl;
 
     //search ended 
     //construct the path
