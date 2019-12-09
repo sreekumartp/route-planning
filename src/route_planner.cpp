@@ -29,9 +29,8 @@ RoutePlanner::RoutePlanner(RouteModel &model, float start_x, float start_y, floa
 
 float RoutePlanner::CalculateHValue(RouteModel::Node const *node) {
 
-auto other = *(this->end_node);
 
-auto dist=node->distance(other);
+auto dist=node->distance(*(this->end_node));
 //cout <<"dist " << dist << endl;
 return dist;
 
@@ -55,10 +54,8 @@ current_node->FindNeighbors();
 
 int len=current_node->neighbors.size();
 
-//update the expansion value
-//auto g_value = current_node->g_value+1;
+
 auto h_value = 0.0;
-//cout <<"g val: " <<g_value<<endl;
 
 for (int i=0 ; i < len ; i++){
 
@@ -68,11 +65,12 @@ for (int i=0 ; i < len ; i++){
     current_node->neighbors[i]->h_value=h_value;
     //update expansion
     //new g value is current g value + distance from current node
-    current_node->neighbors[i]->g_value=current_node->neighbors[i]->g_value + current_node->neighbors[i]->distance(*(current_node));
+    current_node->neighbors[i]->g_value=current_node->g_value + current_node->neighbors[i]->distance(*(current_node));
     current_node->neighbors[i]->parent=current_node;
     current_node->neighbors[i]->visited=true;
+    current_node->visited=true;
     open_list.push_back(current_node->neighbors[i]);
-
+  
 }
 
 
@@ -84,13 +82,12 @@ for (int i=0 ; i < len ; i++){
 bool CompareHplusG(RouteModel::Node const *node1, RouteModel::Node const *node2)
 {
 
-auto H1= node1->g_value + node1->h_value;
-auto H2= node2->g_value + node2->h_value;
 
-if(H1>=H2) return true;
-else return false;
+auto H1= (node1->g_value + node1->h_value);
+auto H2= (node2->g_value + node2->h_value);
 
-//return(H1>H2);
+if(H1==H2) return (H1 < H2);
+return(H1 > H2);
 
 }
 
@@ -110,16 +107,22 @@ RouteModel::Node *RoutePlanner::NextNode() {
 
   std::sort( open_list.begin(), open_list.end(),CompareHplusG);
 
+  
+  //auto n1 = open_list.front()->h_value + open_list.front()->g_value;
+  //auto n2 = open_list.back()->h_value + open_list.back()->g_value;
+  //cout << n1 << " " << n2 <<endl;
 
 //after sort we should get the node with the least g+h value
 //this node needs to be returned as the node to be traversed next 
 //remove this node from the list of open nodes to be examined
 
-auto * Next_Node = new RouteModel:: Node; //where to delete this node ?
+auto Next_Node = new RouteModel:: Node; //where to delete this node ?
 
 Next_Node=open_list.back();
-
 open_list.pop_back();
+
+
+//cout << "returning next node: " << Next_Node << endl;
 
 return (Next_Node);
 
@@ -145,18 +148,21 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
     //do until parent node is null (=> start node)
     // when parent node is found compute distance from parent node and update local distance variable
     // make current node as parent node and continue with the loop
-   auto *next_node = current_node;
-
-    int count =0;
-    while((next_node->parent->x != this->start_node->x) && (next_node->parent->y != this->start_node->y))
+  
+   path_found.insert(path_found.begin(),*(current_node));
+   auto next_node = current_node;
+   
+    do
     {
         auto other = *(next_node->parent);
         path_found.insert(path_found.begin(), other);
         distance += next_node->distance(other);
         next_node = next_node->parent;
-     }
-
-
+     }  while((next_node->parent->x != this->start_node->x) && (next_node->parent->y != this->start_node->y));
+   
+   
+    path_found.insert(path_found.begin(),*(next_node->parent));
+    distance += next_node->distance(*(next_node->parent));
 
     distance *= m_Model.MetricScale(); // Multiply the distance by the scale of the map to get meters.
     return path_found;
@@ -172,32 +178,26 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
 // - Store the final path in the m_Model.path attribute before the method exits. This path will then be displayed on the map tile.
 
 void RoutePlanner::AStarSearch() {
-   auto *current_node = this->start_node;
 
-    auto x =   this->end_node->x;
-    auto y =   this->end_node->y;
+   auto current_node = this->start_node;
 
-
-  //  cout << "endx,endy" << this->end_node->x <<"," << this->end_node->y<< endl;
+    auto end_x =   this->end_node->x;
+    auto end_y =   this->end_node->y;
 
     // TODO: Implement your solution here.
     //while the node is not the end node 
-    int count=0;
-    while((x != current_node->x) && (y != current_node->y))
+  
+   while(true)
     {
 
-     //   if((x == current_node->x) && (y == current_node->y)) break;
-       
             AddNeighbors(current_node);
-            //delete current_node; ??
             current_node=NextNode();
-         //   cout << "endx,endy,currx,curry: " << this->end_node->x <<"," << this->end_node->y<<","<<current_node->x<<","<<current_node->y<<endl;
+            //cout << "next current node: " << current_node << endl << endl;;
+            if((end_x == current_node->x) && (end_y == current_node->y))break;
     
-     }
-  //   cout << "end of search" <<endl;
-
+     } 
     //search ended 
     //construct the path
-    if (current_node != nullptr)
+       
         m_Model.path =  ConstructFinalPath(current_node);
 }
